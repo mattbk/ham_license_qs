@@ -43,6 +43,8 @@ drop_image <- function(x){
 gfk_requests <- lapply(gfk_requests, drop_image)
 # Put the requests together in a data frame
 requests <- bind_rows(gfk_requests)
+# Add URL column
+requests$url <- paste0("https://iframe.publicstuff.com/#?client_id=1353&request_id=",requests$id)
 # Add posted column
 requests$posted <- NA
 # Sort by date
@@ -95,12 +97,13 @@ requests.new <- dbGetQuery(mydb, 'SELECT * FROM requests WHERE posted IS NULL OR
 posts_at_once <- 3
 for(i in 1:posts_at_once){
     request <- requests.new[i,]
+    text_to_post <- paste0(request$title, " at ", request$address, " (",request$url,"): ", request$description)
     # Post one selected request
     if(nchar(request$image_thumbnail) > 1){
         download.file(gsub("small","large",request$image_thumbnail), 'temp.jpg', mode="wb")
-        post_media(mastodon_token, paste0(request$title, " at ", request$address, ": ", request$description), file = "temp.jpg")
+        post_media(mastodon_token, text_to_post, file = "temp.jpg")
     } else {
-        post_status(mastodon_token, paste0(request$title, " at ", request$address, ": ", request$description))
+        post_status(mastodon_token, text_to_post)
         }
 
     # After tweeting or tooting, mark what has been posted.
