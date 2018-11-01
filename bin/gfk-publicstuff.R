@@ -42,7 +42,10 @@ gfk_requests <- bind_rows(gfk_requests)
 
 
 #### Tweeting
-# https://rcrastinate.blogspot.com/2018/05/send-tweets-from-r-very-short.html
+# You now need a developer account to set up an app, which takes some time.
+# Do that here: https://developer.twitter.com/en/apply-for-access.html
+# A workaround could be to set up a Mastodon account and then auto-tweet
+# using the fantastic https://crossposter.masto.donte.com.br/.
 
 # Read authentication values from ini file
 # Don't commit real values to git!
@@ -53,12 +56,16 @@ setup_twitter_oauth(consumer_key = auth$twitter$consumer_key,
                     consumer_secret = auth$twitter$consumer_secret,
                     access_secret = auth$twitter$access_secret)
 
+# https://rcrastinate.blogspot.com/2018/05/send-tweets-from-r-very-short.html
+
 # After tweeting, write a small text file that has the last timestamp that was tweeted. Use that for grabbing future requests.
 
 
-
-
-
-
-
+#### Tooting
+# https://shkspr.mobi/blog/2018/08/easy-guide-to-building-mastodon-bots/
+# Might be able to use this natively: https://github.com/ThomasChln/mastodon
+library(mastodon)
+auth <- read.ini("auth.ini")
+mastodon_token <- login(auth$mastodon$server, auth$mastodon$email, auth$mastodon$password)
+post_status(mastodon_token, 'I posted this status with the wonderful https://github.com/ThomasChln/mastodon #rstats package.')
 
