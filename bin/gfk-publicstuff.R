@@ -6,6 +6,7 @@
 library(jsonlite)
 library(rjson)
 library(dplyr)
+library(twitteR)
 
 # Grab city view for Grand Forks
 gfk <- rjson::fromJSON(file="https://www.publicstuff.com/api/2.1/city_view?space_id=15174")
@@ -40,6 +41,13 @@ gfk_requests <- bind_rows(gfk_requests)
 
 
 #### Tweeting
+# https://rcrastinate.blogspot.com/2018/05/send-tweets-from-r-very-short.html
+
+# Need to create an external file with keys so they don't end up on GitHub
+setup_twitter_oauth(consumer_key = "<your Consumer Key>",
+                    access_token = "<your Acces Token>",
+                    consumer_secret = "<your Consumer Secret>",
+                    access_secret = "<your Access Token Secret>")
 
 # After tweeting, write a small text file that has the last timestamp that was tweeted. Use that for grabbing future requests.
 
