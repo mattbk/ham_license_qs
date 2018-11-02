@@ -6,6 +6,8 @@
 # Run from one machine, otherwise you'll get duplicate databases that have differing posted items.
 # Run with `Rscript bin/gfk-publicstuff.R`
 
+# Raspberry Pi: https://www.r-bloggers.com/how-to-install-the-latest-version-of-r-statistics-on-your-raspberry-pi/
+
 library(jsonlite)
 library(rjson)
 library(dplyr)
