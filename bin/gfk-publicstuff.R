@@ -3,6 +3,9 @@
 # Note that the API version at https://www.publicstuff.com/developers#!/API is v2.0,
 # but this only includes requests up to a certain date. Use v2.1 for recent requests.
 
+# Run from one machine, otherwise you'll get duplicate databases that have differing posted items.
+# Run with `Rscript bin/gfk-publicstuff.R`
+
 library(jsonlite)
 library(rjson)
 library(dplyr)
@@ -11,11 +14,15 @@ library(ini)
 library(mastodon) #devtools::install_github('ThomasChln/mastodon')
 library(RSQLite)
 
-# TODO Generalize to remove gfk_ from these variable names
-
+### Config
+# Authentication variables
+auth <- read.ini("auth.ini")
 # Grab city view for Grand Forks
 space_id <- 15174
 client_id <- 1353 #needed later
+
+
+### Get going
 city <- rjson::fromJSON(file=paste0("https://www.publicstuff.com/api/2.1/city_view?space_id=",space_id))
 ## Make a data frame of request_type IDs and names
 city_request_types <- as.data.frame(t(sapply(city$response$request_types$request_types,
@@ -34,8 +41,7 @@ recent_requests <- lapply(city_request_types$request_type_id,
 recent_requests <- lapply(recent_requests, function(x) x$response$requests$request)
 # Drop null list items
 recent_requests <- Filter(Negate(is.null), recent_requests)
-# Drop images (in fact, there is image_thumbnail in the data we want,
-# and we can just replace small_ with large_ to get a bigger image later!)
+# Image data is in a sub-dataframe, which we don't need
 drop_image <- function(x){
     if(class(x$primary_attachment) == "data.frame") {
         x$primary_attachment <- NULL
@@ -47,10 +53,8 @@ recent_requests <- lapply(recent_requests, drop_image)
 recent_requests <- bind_rows(recent_requests)
 # Add URL
 recent_requests$url <- paste0("https://iframe.publicstuff.com/#?client_id=",client_id,"&request_id=",recent_requests$id)
-# Add posted column
+# Add posted column (to include in database table)
 recent_requests$posted <- NA
-# Sort by date
-#gfk_requests <- gfk_requests[order(gfk_requests$date_created),]
 
 ## Store requests in a database
 # Create DB if it doesn't exist, otherwise connect
@@ -66,31 +70,9 @@ dbWriteTable(mydb, "requests", rows.add,append=T)
 # Get out of the database
 dbDisconnect(mydb)
 
-#### Tweeting
-# You now need a developer account to set up an app, which takes some time.
-# Do that here: https://developer.twitter.com/en/apply-for-access.html
-# A workaround could be to set up a Mastodon account and then auto-tweet
-# using the fantastic https://crossposter.masto.donte.com.br/.
-
-# Read authentication values from ini file
-# Don't commit real values to git!
-auth <- read.ini("auth.ini")
-
-# setup_twitter_oauth(consumer_key = auth$twitter$consumer_key,
-#                     access_token = auth$twitter$access_token,
-#                     consumer_secret = auth$twitter$consumer_secret,
-#                     access_secret = auth$twitter$access_secret)
-
-# https://rcrastinate.blogspot.com/2018/05/send-tweets-from-r-very-short.html
-
-
-
-
 #### Tooting
 # https://shkspr.mobi/blog/2018/08/easy-guide-to-building-mastodon-bots/
-# Might be able to use this natively: https://github.com/ThomasChln/mastodon
-
-auth <- read.ini("auth.ini")
+# https://github.com/ThomasChln/mastodon
 mastodon_token <- login(auth$mastodon$server, auth$mastodon$email, auth$mastodon$password)
 
 # Each time this script runs, take the oldest n requests, post them, and mark them in the db.
@@ -119,10 +101,24 @@ for(i in 1:posts_at_once){
     dbExecute(mydb, "UPDATE requests SET posted = :posted where id = :id",
                        params=data.frame(posted=TRUE,
                                             id=request$id))
-
 }
-
 # Get out of the database
 dbDisconnect(mydb)
-unlink("requests.sqlite")
+
+#### Tweeting
+# You now need a developer account to set up an app, which takes some time.
+# Do that here: https://developer.twitter.com/en/apply-for-access.html
+# A workaround could be to set up a Mastodon account and then auto-tweet
+# using the fantastic https://crossposter.masto.donte.com.br/.
+
+# Read authentication values from ini file
+# Don't commit real values to git!
+auth <- read.ini("auth.ini")
+
+# setup_twitter_oauth(consumer_key = auth$twitter$consumer_key,
+#                     access_token = auth$twitter$access_token,
+#                     consumer_secret = auth$twitter$consumer_secret,
+#                     access_secret = auth$twitter$access_secret)
+
+# https://rcrastinate.blogspot.com/2018/05/send-tweets-from-r-very-short.html
 
