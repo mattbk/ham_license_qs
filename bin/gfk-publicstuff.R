@@ -7,6 +7,7 @@
 # Run with `Rscript bin/gfk-publicstuff.R`
 
 # Raspberry Pi: https://www.r-bloggers.com/how-to-install-the-latest-version-of-r-statistics-on-your-raspberry-pi/
+# Can install with sudo apt-get install... but it is 3.1.1 by default.
 
 library(jsonlite)
 library(rjson)
@@ -79,33 +80,38 @@ mastodon_token <- login(auth$mastodon$server, auth$mastodon$email, auth$mastodon
 
 # Each time this script runs, take the oldest n requests, post them, and mark them in the db.
 mydb <- dbConnect(RSQLite::SQLite(), "requests.sqlite")
-new_requests <- dbGetQuery(mydb, 'SELECT * FROM requests WHERE posted IS NULL ORDER BY date_created')
+#all_requests <- dbGetQuery(mydb, 'SELECT * FROM requests')
+new_requests <- dbGetQuery(mydb, 'SELECT * FROM requests WHERE posted <> 1 ORDER BY date_created')
 
 # Set number of posts allowed at once. Will need to adjust according to cron
 # schedule and number of posts coming in daily so you don't get behind.
 posts_at_once <- 3
-for(i in 1:posts_at_once){
-    request <- new_requests[i,]
-    # Post one selected request
-    post_text <- paste0(request$title, " at ", request$address, " (",request$url,"): ", request$description)
-    if(nchar(request$image_thumbnail) > 1){
-        download.file(gsub("small","large",request$image_thumbnail), 'temp.jpg', mode="wb")
-        post_media(mastodon_token, post_text, file = "temp.jpg")
-    } else {
-        post_status(mastodon_token, post_text)
-        }
+# Only post if there are new requests
+if(nrow(new_requests) > 0){
+    # One post per request, up to limit
+    for(i in 1:posts_at_once){
+        request <- new_requests[i,]
+        # Post one selected request
+        post_text <- paste0(request$title, " at ", request$address, " (",request$url,"): ", request$description)
+        if(nchar(request$image_thumbnail) > 1){
+            download.file(gsub("small","large",request$image_thumbnail), 'temp.jpg', mode="wb")
+            post_media(mastodon_token, post_text, file = "temp.jpg")
+        } else {
+            post_status(mastodon_token, post_text)
+            }
 
-    # After tweeting or tooting, mark what has been posted.
-    # https://cran.r-project.org/web/packages/RSQLite/vignettes/RSQLite.html
-    # https://stackoverflow.com/a/43978368/2152245
+        # After tweeting or tooting, mark what has been posted.
+        # https://cran.r-project.org/web/packages/RSQLite/vignettes/RSQLite.html
+        # https://stackoverflow.com/a/43978368/2152245
 
-    # Update posted column as needed
-    dbExecute(mydb, "UPDATE requests SET posted = :posted where id = :id",
-                       params=data.frame(posted=TRUE,
-                                            id=request$id))
+        # Update posted column as needed
+        dbExecute(mydb, "UPDATE requests SET posted = :posted where id = :id",
+                           params=data.frame(posted=TRUE,
+                                                id=request$id))
+    }
+    # Get out of the database
+    dbDisconnect(mydb)
 }
-# Get out of the database
-dbDisconnect(mydb)
 
 #### Tweeting
 # You now need a developer account to set up an app, which takes some time.
