@@ -56,8 +56,8 @@ recent_requests <- lapply(recent_requests, drop_image)
 recent_requests <- bind_rows(recent_requests)
 # Add URL
 recent_requests$url <- paste0("https://iframe.publicstuff.com/#?client_id=",client_id,"&request_id=",recent_requests$id)
-# Add posted column (to include in database table)
-recent_requests$posted <- NA
+# Add posted column (to include in database table) and default to 0 (false)
+recent_requests$posted <- 0
 
 ## Store requests in a database
 # Create DB if it doesn't exist, otherwise connect
@@ -83,11 +83,12 @@ mydb <- dbConnect(RSQLite::SQLite(), "requests.sqlite")
 #all_requests <- dbGetQuery(mydb, 'SELECT * FROM requests')
 new_requests <- dbGetQuery(mydb, 'SELECT * FROM requests WHERE posted <> 1 ORDER BY date_created')
 
-# Set number of posts allowed at once. Will need to adjust according to cron
-# schedule and number of posts coming in daily so you don't get behind.
-posts_at_once <- 3
+
 # Only post if there are new requests
 if(nrow(new_requests) > 0){
+    # Set number of posts allowed at once. Will need to adjust according to cron
+    # schedule and number of posts coming in daily so you don't get behind.
+    posts_at_once <- min(3, nrow(new_requests))
     # One post per request, up to limit
     for(i in 1:posts_at_once){
         request <- new_requests[i,]
@@ -111,6 +112,12 @@ if(nrow(new_requests) > 0){
     }
     # Get out of the database
     dbDisconnect(mydb)
+
+    # Message to console (if running from script)
+    print("Successful toots.")
+} else {
+    # Message to console (if running from script)
+    print("No requests to toot.")
 }
 
 #### Tweeting
