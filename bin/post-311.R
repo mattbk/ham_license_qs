@@ -7,12 +7,10 @@
 # Run with `Rscript bin/gfk-publicstuff.R`
 
 # Raspberry Pi: https://www.r-bloggers.com/how-to-install-the-latest-version-of-r-statistics-on-your-raspberry-pi/
-# Can install with sudo apt-get install... but it is 3.1.1 by default.
+# Can install in Jessie with sudo apt-get install... but it is 3.1.1 by default.
 
 library(jsonlite)
 library(rjson)
-library(dplyr)
-library(twitteR)
 library(ini)
 library(mastodon) #devtools::install_github('ThomasChln/mastodon')
 library(RSQLite)
@@ -53,7 +51,8 @@ drop_image <- function(x){
 }
 recent_requests <- lapply(recent_requests, drop_image)
 # Put the requests together in a data frame
-recent_requests <- bind_rows(recent_requests)
+#recent_requests <- bind_rows(recent_requests)
+recent_requests <- do.call("rbind",recent_requests)
 # Add URL
 recent_requests$url <- paste0("https://iframe.publicstuff.com/#?client_id=",client_id,"&request_id=",recent_requests$id)
 # Add posted column (to include in database table) and default to 0 (false)
@@ -101,7 +100,7 @@ if(nrow(new_requests) > 0){
             post_status(mastodon_token, post_text)
             }
 
-        # After tweeting or tooting, mark what has been posted.
+        # After tooting, mark what has been posted.
         # https://cran.r-project.org/web/packages/RSQLite/vignettes/RSQLite.html
         # https://stackoverflow.com/a/43978368/2152245
 
@@ -119,21 +118,4 @@ if(nrow(new_requests) > 0){
     # Message to console (if running from script)
     print("No requests to toot.")
 }
-
-#### Tweeting
-# You now need a developer account to set up an app, which takes some time.
-# Do that here: https://developer.twitter.com/en/apply-for-access.html
-# A workaround could be to set up a Mastodon account and then auto-tweet
-# using the fantastic https://crossposter.masto.donte.com.br/.
-
-# Read authentication values from ini file
-# Don't commit real values to git!
-auth <- read.ini("auth.ini")
-
-# setup_twitter_oauth(consumer_key = auth$twitter$consumer_key,
-#                     access_token = auth$twitter$access_token,
-#                     consumer_secret = auth$twitter$consumer_secret,
-#                     access_secret = auth$twitter$access_secret)
-
-# https://rcrastinate.blogspot.com/2018/05/send-tweets-from-r-very-short.html
 
