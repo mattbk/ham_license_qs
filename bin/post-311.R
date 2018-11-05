@@ -10,7 +10,6 @@
 # Can install in Jessie with sudo apt-get install... but it is 3.1.1 by default.
 
 library(jsonlite)
-library(rjson)
 library(ini)
 library(mastodon) #devtools::install_github('ThomasChln/mastodon')
 library(RSQLite)
@@ -26,10 +25,10 @@ client_id <- 1353 #needed later
 
 
 ### Get going
-city <- rjson::fromJSON(file=paste0("https://www.publicstuff.com/api/2.1/city_view?space_id=",space_id))
+city <- jsonlite::fromJSON(txt=paste0("https://www.publicstuff.com/api/2.1/city_view?space_id=",space_id))
 ## Make a data frame of request_type IDs and names
-city_request_types <- as.data.frame(t(sapply(city$response$request_types$request_types,
-                                            function(x) c(x$request_type$id, x$request_type$name))))
+city_request_types <- city$response$request_types$request_types$request_type[,c("id","name")]
+
 # Add column names
 names(city_request_types) <- c("request_type_id","request_type_name")
 # Loop through request types and get n most recent in each category
@@ -53,7 +52,6 @@ drop_image <- function(x){
 }
 recent_requests <- lapply(recent_requests, drop_image)
 # Put the requests together in a data frame
-#recent_requests <- bind_rows(recent_requests)
 recent_requests <- do.call("rbind",recent_requests)
 # Add URL
 recent_requests$url <- paste0("https://iframe.publicstuff.com/#?client_id=",client_id,"&request_id=",recent_requests$id)
@@ -68,11 +66,12 @@ mydb <- dbConnect(RSQLite::SQLite(), "requests.sqlite")
 # See if table exists, then get existing rows back
 if(nrow(dbGetQuery(mydb, "SELECT name FROM sqlite_master WHERE type='table' AND name='requests'")) > 0){
     rows.exist <- dbGetQuery(mydb, 'SELECT id FROM requests')$id
+    col_names <- names(dbGetQuery(mydb, 'SELECT * FROM requests'))
 } else rows.exist <- NA
 # Only add rows that don't exist, by request ID
 rows.add <- recent_requests[!recent_requests$id %in% rows.exist,]
-# Add the rows
-dbWriteTable(mydb, "requests", rows.add,append=T)
+# Add the rows (rarrange to be in right order)
+dbWriteTable(mydb, "requests", rows.add[,col_names],append=T)
 # Get out of the database
 dbDisconnect(mydb)
 
