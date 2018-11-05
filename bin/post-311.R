@@ -14,6 +14,7 @@ library(rjson)
 library(ini)
 library(mastodon) #devtools::install_github('ThomasChln/mastodon')
 library(RSQLite)
+library(stringr)
 
 ### Config
 # Authentication variables
@@ -47,7 +48,7 @@ drop_image <- function(x){
     if(class(x$primary_attachment) == "data.frame") {
         x$primary_attachment <- NULL
         }
-    return(x) 
+    return(x)
 }
 recent_requests <- lapply(recent_requests, drop_image)
 # Put the requests together in a data frame
@@ -92,7 +93,7 @@ if(nrow(new_requests) > 0){
     for(i in 1:posts_at_once){
         request <- new_requests[i,]
         # Post one selected request
-        post_text <- paste0(request$title, " at ", request$address, " (",request$url,"): ", request$description)
+        post_text <- paste0(request$title, " at ", str_squish(request$address), " (",request$url,"): ", request$description)
         if(nchar(request$image_thumbnail) > 1){
             download.file(gsub("small","large",request$image_thumbnail), 'temp.jpg', mode="wb")
             post_media(mastodon_token, post_text, file = "temp.jpg")
