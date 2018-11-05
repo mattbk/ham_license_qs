@@ -15,6 +15,7 @@ library(ini)
 library(mastodon) #devtools::install_github('ThomasChln/mastodon')
 library(RSQLite)
 library(stringr)
+library(emo)
 
 ### Config
 # Authentication variables
@@ -58,6 +59,8 @@ recent_requests <- do.call("rbind",recent_requests)
 recent_requests$url <- paste0("https://iframe.publicstuff.com/#?client_id=",client_id,"&request_id=",recent_requests$id)
 # Add posted column (to include in database table) and default to 0 (false)
 recent_requests$posted <- 0
+# Add request_type ID
+recent_requests <- merge(recent_requests,city_request_types, by.x = "title", by.y = "request_type_name", all.x=T)
 
 ## Store requests in a database
 # Create DB if it doesn't exist, otherwise connect
@@ -83,7 +86,6 @@ mydb <- dbConnect(RSQLite::SQLite(), "requests.sqlite")
 #all_requests <- dbGetQuery(mydb, 'SELECT * FROM requests')
 new_requests <- dbGetQuery(mydb, 'SELECT * FROM requests WHERE posted <> 1 ORDER BY date_created')
 
-
 # Only post if there are new requests
 if(nrow(new_requests) > 0){
     # Set number of posts allowed at once. Will need to adjust according to cron
@@ -91,13 +93,47 @@ if(nrow(new_requests) > 0){
     posts_at_once <- min(3, nrow(new_requests))
     # One post per request, up to limit
     for(i in 1:posts_at_once){
+        # Select request
         request <- new_requests[i,]
+        # Determine emoji
+        if(request$request_type_id==28157){
+            emoji <- emo::ji("biohazard")
+        } else if(request$request_type_id==28158){
+            emoji <- emo::ji("poop")
+        } else if(request$request_type_id==28400){
+            emoji <- emo::ji("bicycle")
+        } else if(request$request_type_id==28171){
+            emoji <- emo::ji("recycle")
+        } else if(request$request_type_id==32004){
+            emoji <- emo::ji("snowman")
+        } else if(request$request_type_id==28155){
+            emoji <- emo::ji("car")
+        } else if(request$request_type_id==28086){
+            emoji <- emo::ji("leaves")
+        } else if(request$request_type_id==28060){
+            emoji <- emo::ji("bulb")
+        } else if(request$request_type_id==27903){
+            emoji <- emo::ji("seedling")
+        } else if(request$request_type_id==27902){
+            emoji <- emo::ji("tractor")
+        } else if(request$request_type_id==27901){
+            emoji <- emo::ji("alarm")
+        } else if(request$request_type_id==26104){
+            emoji <- emo::ji("pick")
+        } else if(request$request_type_id==26096){
+            emoji <- emo::ji("biohazard")
+        } else emoji <- emo::ji("interrobang") #27904, general concern
+
         # Post one selected request
-        post_text <- paste0(request$title, " at ", str_squish(request$address), " (",request$url,"): ", request$description)
+        post_text <- paste0(emoji, " ", request$title, " at ", str_squish(request$address), " (",request$url,"): ", request$description)
+        # Check for image
         if(nchar(request$image_thumbnail) > 1){
+            # Get the image
             download.file(gsub("small","large",request$image_thumbnail), 'temp.jpg', mode="wb")
+            # Post
             post_media(mastodon_token, post_text, file = "temp.jpg")
         } else {
+            # Post without image
             post_status(mastodon_token, post_text)
             }
 
