@@ -17,7 +17,7 @@ library(RSQLite)
 
 ### Config
 # Authentication variables
-auth <- read.ini("/home/pi/hack-grand-forks/auth.ini")
+auth <- read.ini("auth.ini")
 # Grab city view for Grand Forks
 space_id <- 15174
 client_id <- 1353 #needed later
@@ -47,7 +47,7 @@ drop_image <- function(x){
     if(class(x$primary_attachment) == "data.frame") {
         x$primary_attachment <- NULL
         }
-    return(x)
+    return(x) 
 }
 recent_requests <- lapply(recent_requests, drop_image)
 # Put the requests together in a data frame
@@ -60,7 +60,7 @@ recent_requests$posted <- 0
 
 ## Store requests in a database
 # Create DB if it doesn't exist, otherwise connect
-mydb <- dbConnect(RSQLite::SQLite(), "/home/pi/hack-grand-forks/requests.sqlite")
+mydb <- dbConnect(RSQLite::SQLite(), "requests.sqlite")
 # See if table exists, then get existing rows back
 if(nrow(dbGetQuery(mydb, "SELECT name FROM sqlite_master WHERE type='table' AND name='requests'")) > 0){
     rows.exist <- dbGetQuery(mydb, 'SELECT id FROM requests')$id
@@ -78,7 +78,7 @@ dbDisconnect(mydb)
 mastodon_token <- login(auth$mastodon$server, auth$mastodon$email, auth$mastodon$password)
 
 # Each time this script runs, take the oldest n requests, post them, and mark them in the db.
-mydb <- dbConnect(RSQLite::SQLite(), "/home/pi/hack-grand-forks/requests.sqlite")
+mydb <- dbConnect(RSQLite::SQLite(), "requests.sqlite")
 #all_requests <- dbGetQuery(mydb, 'SELECT * FROM requests')
 new_requests <- dbGetQuery(mydb, 'SELECT * FROM requests WHERE posted <> 1 ORDER BY date_created')
 
