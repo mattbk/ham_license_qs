@@ -94,7 +94,8 @@ if(nrow(new_requests) > 0){
     for(i in 1:posts_at_once){
         # Select request
         request <- new_requests[i,]
-        # Determine emoji
+        # Determine emoji from request_type_id
+        emoji <- emo::ji("interrobang") # default
         if(request$request_type_id==28157){
             emoji <- emo::ji("biohazard")
         } else if(request$request_type_id==28158){
@@ -104,7 +105,7 @@ if(nrow(new_requests) > 0){
         } else if(request$request_type_id==28171){
             emoji <- emo::ji("recycle")
         } else if(request$request_type_id==32004){
-            emoji <- emo::ji("snowman")
+            emoji <- emo::ji("snowflake")
         } else if(request$request_type_id==28155){
             emoji <- emo::ji("car")
         } else if(request$request_type_id==28086){
@@ -122,6 +123,26 @@ if(nrow(new_requests) > 0){
         } else if(request$request_type_id==26096){
             emoji <- emo::ji("biohazard")
         } else emoji <- emo::ji("interrobang") #27904, general concern
+
+        # Add emoji from request description
+        if(any(c("dog","dogs") %in% request$description)) {
+            emoji <- paste0(emoji, emo::ji("dog"))
+        }
+        if(any(c("parking") %in% request$description)) {
+            emoji <- paste0(emoji, emo::ji("parking"))
+        }
+        if(any(c("leaves", "leaf") %in% request$description)) {
+            emoji <- paste0(emoji, emo::ji("fallen_leaf"))
+        }
+        if(any(c("flood", "floods") %in% request$description)) {
+            emoji <- paste0(emoji, emo::ji("ocean"))
+        }
+        if("speeding" %in% request$description) {
+            emoji <- paste0(emoji, emo::ji("rocket"))
+        }
+        if(any(c("pedestrian", "pedestrians") %in% request$description)) {
+            emoji <- paste0(emoji, emo::ji("walking"))
+        }
 
         # Post one selected request
         post_text <- paste0(emoji, " ", request$title, " at ", str_squish(request$address), " (",request$url,"): ", request$description)
