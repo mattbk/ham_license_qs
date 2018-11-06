@@ -125,22 +125,22 @@ if(nrow(new_requests) > 0){
         } else emoji <- emo::ji("interrobang") #27904, general concern
 
         # Add emoji from request description
-        if(any(c("dog","dogs") %in% request$description)) {
+        if(grepl("dog|dogs", request$description)) {
             emoji <- paste0(emoji, emo::ji("dog"))
         }
-        if(any(c("parking") %in% request$description)) {
+        if(grepl("parking", request$description)) {
             emoji <- paste0(emoji, emo::ji("parking"))
         }
-        if(any(c("leaves", "leaf") %in% request$description)) {
+        if(grepl("leaf|leaves", request$description)) {
             emoji <- paste0(emoji, emo::ji("fallen_leaf"))
         }
-        if(any(c("flood", "floods") %in% request$description)) {
+        if(grepl("flood|floods", request$description)) {
             emoji <- paste0(emoji, emo::ji("ocean"))
         }
-        if("speeding" %in% request$description) {
+        if(grepl("speeding", request$description)) {
             emoji <- paste0(emoji, emo::ji("rocket"))
         }
-        if(any(c("pedestrian", "pedestrians") %in% request$description)) {
+        if(grepl("pedestrian|pedestrians|walkers", request$description)) {
             emoji <- paste0(emoji, emo::ji("walking"))
         }
 
