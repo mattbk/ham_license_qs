@@ -14,7 +14,7 @@ library(ini)
 library(mastodon) #devtools::install_github('ThomasChln/mastodon')
 library(RSQLite)
 library(stringr)
-library(emo)
+library(emo) #devtools::install_github("hadley/emo")
 
 ### Config
 # Authentication variables
@@ -145,7 +145,7 @@ if(nrow(new_requests) > 0){
         }
 
         # Post one selected request
-        post_text <- paste0(emoji, " ", request$title, " at ", str_squish(request$address), " (",request$url,"): ", request$description)
+        post_text <- str_trunc(paste0(emoji, " ", request$title, " at ", str_squish(request$address), " (",request$url,"): ", request$description),500)
         # Check for image
         if(nchar(request$image_thumbnail) > 1){
             # Get the image
