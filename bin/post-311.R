@@ -147,7 +147,7 @@ if(nrow(new_requests) > 0){
         # Post one selected request
         post_text <- str_trunc(paste0(emoji, " ", request$title, " at ", str_squish(request$address), " (",request$url,"): ", request$description),500)
         # Check for image
-        if(nchar(request$image_thumbnail) > 1){
+        if(nchar(request$image_thumbnail, keepNA = F) > 2 ){
             # Get the image
             download.file(gsub("small","large",request$image_thumbnail), 'temp.jpg', mode="wb")
             # Post
