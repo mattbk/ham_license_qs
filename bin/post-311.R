@@ -9,6 +9,9 @@
 # Raspberry Pi: https://www.r-bloggers.com/how-to-install-the-latest-version-of-r-statistics-on-your-raspberry-pi/
 # Can install in Jessie with sudo apt-get install... but it is 3.1.1 by default.
 
+# Log the start time
+print(paste("311 script started at", Sys.time()))
+
 library(jsonlite)
 library(ini)
 library(mastodon) #devtools::install_github('ThomasChln/mastodon')
