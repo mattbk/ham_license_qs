@@ -32,9 +32,9 @@ config = ConfigParser()
 config.read('auth.ini')
 
 # read values from a section
-server = config.get('mastodon', 'server')
-email = config.get('mastodon', 'email')
-password = config.get('mastodon', 'password')
+server = config.get('hackgfk_311_ebooks', 'server')
+email = config.get('hackgfk_311_ebooks', 'email')
+password = config.get('hackgfk_311_ebooks', 'password')
 
 # Register the app (once)
 if not os.path.isfile('hackgfk_311_ebooks_clientcred.secret'):
