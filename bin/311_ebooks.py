@@ -56,4 +56,6 @@ mastodon.log_in(
 )
 
 # Send toot
-mastodon.toot(text_model.make_short_sentence(280))
+toot = text_model.make_short_sentence(280)
+print(toot)
+mastodon.toot(toot)
