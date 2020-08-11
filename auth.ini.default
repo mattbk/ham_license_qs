@@ -1,0 +1,5 @@
+[mastodon]
+#needs trailing slash
+server = https://botsin.space/
+email = heck@yeah.com
+password = ReallyGoodPassword
