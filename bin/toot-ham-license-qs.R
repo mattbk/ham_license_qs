@@ -86,35 +86,48 @@ mastodon_token <- login(auth$mastodon$server, auth$mastodon$email, auth$mastodon
 
 # Test vector of toots
 # This is where a df of questions, answer options, and any figures will go
-db <- data.frame(license = letters,
-                question = LETTERS,
-                ans1 = rev(letters),
-                ans2 = letters,
-                ans3 = rev(letters),
-                ans4 = rev(LETTERS),
-                ans_correct = letters,
-                fig_path = rev(LETTERS))
+# db <- data.frame(license = letters,
+#                 question = LETTERS,
+#                 ans1 = rev(letters),
+#                 ans2 = letters,
+#                 ans3 = rev(letters),
+#                 ans4 = rev(LETTERS),
+#                 ans_correct = letters,
+#                 fig_path = rev(LETTERS))
 
-# TODO pull all questions from https://github.com/russolsen/ham_radio_question_pool
-# Arrange data frame accordingly.
-
+# Read in the awesome question sets from https://github.com/russolsen/ham_radio_question_pool
+db_tech <- read.csv("lib/ham_radio_question_pool-master/technician-2018-2022/technician.csv", stringsAsFactors = F)
+db_general <- read.csv("lib/ham_radio_question_pool-master/general-2019-2023/general.csv", stringsAsFactors = F)
+db_extra <- read.csv("lib/ham_radio_question_pool-master/extra-2020-2024/extra.csv", stringsAsFactors = F)
+# add name of exam
+db_tech[['exam']] <- "Technician"
+db_general[['exam']] <- "General"
+db_extra[['exam']] <- "Extra"
+# Combine all
+db <- rbind(db_tech,
+            db_general,
+            db_extra)
+# TODO add figures
+db[['fig_path']] <- NA
 
 # Choose a random row to toot
 toot_row <- db[sample(1:nrow(db), 1), ]
 # Scramble answers
 ans_options <- rep(paste0("\n- ",
-                               sample(as.character(toot_row[1,3:6])),
+                               sample(as.character(toot_row[,4:7])),
                                 collapse = ""))
 
 # Build question
-post_text <- paste0(toot_row[['license']],
+post_text <- paste0(toot_row[['exam']],
+                    " ",
+                    toot_row[['id']],
                     ": ",
                     toot_row[['question']],
                     ans_options)
 
 # Toot the thing!
-post_status(mastodon_token,
-            post_text)
+# post_status(mastodon_token,
+#             post_text)
 
 # Check for image
 if(!is.na(toot_row[['fig_path']])){

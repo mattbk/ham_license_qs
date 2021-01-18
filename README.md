@@ -9,3 +9,5 @@ Written in R because I'm much quicker at that than Python, and it seemed like a 
 
 Pull requests always welcome!
 
+If you want to run this yourself (for dev or fun), you can download the question pools from
+https://github.com/russolsen/ham_radio_question_pool and place in `/lib`.
